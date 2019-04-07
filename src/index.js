@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import PropTypes from 'prop-types'
+// import PropTypes from 'prop-types'
 
 import parentPosition from './utils/parent-position'
 import parentHasClass from './utils/parent-has-class'
@@ -23,16 +23,17 @@ function wikimedia (x, y, z) {
 }
 
 // https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
-const lng2tile = (lon, zoom) => (lon + 180) / 360 * Math.pow(2, zoom)
-const lat2tile = (lat, zoom) => (1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom)
+const lng2tile = (lon, zoom) => lon * Math.pow(2, zoom);
+const lat2tile = (lat, zoom) => lat * Math.pow(2, zoom);
+// const lng2tile = (lon, zoom) => (lon + 180) / 360 * Math.pow(2, zoom)
+// const lat2tile = (lat, zoom) => (1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom)
 
 function tile2lng (x, z) {
-  return (x / Math.pow(2, z) * 360 - 180)
+  return x / Math.pow(2, z);
 }
 
 function tile2lat (y, z) {
-  var n = Math.PI - 2 * Math.PI * y / Math.pow(2, z)
-  return (180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n))))
+  return y / Math.pow(2, z);
 }
 
 function getMousePixel (dom, event) {
@@ -46,11 +47,11 @@ function easeOutQuad (t) {
 
 // minLat, maxLat, minLng, maxLng
 const absoluteMinMax = [
-  tile2lat(Math.pow(2, 10), 10),
-  tile2lat(0, 10),
-  tile2lng(0, 10),
-  tile2lng(Math.pow(2, 10), 10)
-]
+  0,
+  1.2,
+  0,
+  1.2
+];
 
 const hasWindow = typeof window !== 'undefined'
 
@@ -65,49 +66,49 @@ const requestAnimationFrame = hasWindow ? window.requestAnimationFrame || window
 const cancelAnimationFrame = hasWindow ? window.cancelAnimationFrame || window.clearTimeout : () => {}
 
 export default class Map extends Component {
-  static propTypes = {
-    center: PropTypes.array,
-    defaultCenter: PropTypes.array,
+  // static propTypes = {
+  //   center: PropTypes.array,
+  //   defaultCenter: PropTypes.array,
 
-    zoom: PropTypes.number,
-    defaultZoom: PropTypes.number,
+  //   zoom: PropTypes.number,
+  //   defaultZoom: PropTypes.number,
 
-    width: PropTypes.number,
-    defaultWidth: PropTypes.number,
+  //   width: PropTypes.number,
+  //   defaultWidth: PropTypes.number,
 
-    height: PropTypes.number,
-    defaultHeight: PropTypes.number,
+  //   height: PropTypes.number,
+  //   defaultHeight: PropTypes.number,
 
-    provider: PropTypes.func,
-    children: PropTypes.node,
+  //   provider: PropTypes.func,
+  //   children: PropTypes.node,
 
-    animate: PropTypes.bool,
-    animateMaxScreens: PropTypes.number,
+  //   animate: PropTypes.bool,
+  //   animateMaxScreens: PropTypes.number,
 
-    minZoom: PropTypes.number,
-    maxZoom: PropTypes.number,
+  //   minZoom: PropTypes.number,
+  //   maxZoom: PropTypes.number,
 
-    metaWheelZoom: PropTypes.bool,
-    metaWheelZoomWarning: PropTypes.string,
-    twoFingerDrag: PropTypes.bool,
-    twoFingerDragWarning: PropTypes.string,
-    warningZIndex: PropTypes.number,
+  //   metaWheelZoom: PropTypes.bool,
+  //   metaWheelZoomWarning: PropTypes.string,
+  //   twoFingerDrag: PropTypes.bool,
+  //   twoFingerDragWarning: PropTypes.string,
+  //   warningZIndex: PropTypes.number,
 
-    attribution: PropTypes.any,
-    attributionPrefix: PropTypes.any,
+  //   attribution: PropTypes.any,
+  //   attributionPrefix: PropTypes.any,
 
-    zoomSnap: PropTypes.bool,
-    mouseEvents: PropTypes.bool,
-    touchEvents: PropTypes.bool,
+  //   zoomSnap: PropTypes.bool,
+  //   mouseEvents: PropTypes.bool,
+  //   touchEvents: PropTypes.bool,
 
-    onClick: PropTypes.func,
-    onBoundsChanged: PropTypes.func,
-    onAnimationStart: PropTypes.func,
-    onAnimationStop: PropTypes.func,
+  //   onClick: PropTypes.func,
+  //   onBoundsChanged: PropTypes.func,
+  //   onAnimationStart: PropTypes.func,
+  //   onAnimationStop: PropTypes.func,
 
-    // will be set to "edge" from v0.12 onward, defaulted to "center" before
-    limitBounds: PropTypes.oneOf(['center', 'edge'])
-  }
+  //   // will be set to "edge" from v0.12 onward, defaulted to "center" before
+  //   limitBounds: PropTypes.oneOf(['center', 'edge'])
+  // }
 
   static defaultProps = {
     animate: true,
@@ -1050,8 +1051,8 @@ export default class Map extends Component {
 
       let xMin = Math.max(old.tileMinX, 0)
       let yMin = Math.max(old.tileMinY, 0)
-      let xMax = Math.min(old.tileMaxX, Math.pow(2, old.roundedZoom) - 1)
-      let yMax = Math.min(old.tileMaxY, Math.pow(2, old.roundedZoom) - 1)
+      let xMax = Math.min(old.tileMaxX, lng2tile(absoluteMinMax[1], old.roundedZoom));
+      let yMax = Math.min(old.tileMaxY, lat2tile(absoluteMinMax[3], old.roundedZoom));
 
       for (let x = xMin; x <= xMax; x++) {
         for (let y = yMin; y <= yMax; y++) {
@@ -1070,8 +1071,8 @@ export default class Map extends Component {
 
     let xMin = Math.max(tileMinX, 0)
     let yMin = Math.max(tileMinY, 0)
-    let xMax = Math.min(tileMaxX, Math.pow(2, roundedZoom) - 1)
-    let yMax = Math.min(tileMaxY, Math.pow(2, roundedZoom) - 1)
+    let xMax = Math.min(tileMaxX, lng2tile(absoluteMinMax[1], roundedZoom));
+    let yMax = Math.min(tileMaxY, lat2tile(absoluteMinMax[3], roundedZoom));
 
     for (let x = xMin; x <= xMax; x++) {
       for (let y = yMin; y <= yMax; y++) {
